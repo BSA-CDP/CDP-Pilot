@@ -26,6 +26,12 @@ void setup() {
   }
   Serial.println("SD card initialized.");  // SD card initialized successfully
 
+  // Delete the existing data file if it exists
+  if (SD.exists("BMP388_data.csv")) {
+    SD.remove("BMP388_data.csv");  // Remove existing file
+    Serial.println("Existing data file deleted.");
+  }
+
   // Initialize the BMP388 sensor with I2C communication
   if (!bmp.begin_I2C()) {  // Default I2C pins for Teensy 4.1 are SDA (pin 18) and SCL (pin 19)
     // If sensor initialization fails, print an error message and halt execution
