@@ -1,12 +1,13 @@
-#include <*** FILL_IN_HERE ***>              // For I2C communication
-#include <*** FILL_IN_HERE ***>              // Adafruit sensor library
-#include "*** FILL_IN_HERE ***"              // Library for BMP388 pressure/temperature sensor
-#include <*** FILL_IN_HERE ***>              // SD card library for reading and writing to SD card
+#include <***FILL_IN_HERE***>              // For I2C communication
+#include <***FILL_IN_HERE***>   // Adafruit sensor library
+#include "***FILL_IN_HERE***"   // Library for BMP388 pressure/temperature sensor
+#include <***FILL_IN_HERE***>                // SD card library for reading and writing to SD card
 
-#define SEALEVELPRESSURE_HPA (*** FILL_IN_HERE ***)  // Define the sea level pressure in hPa (standard atmospheric pressure)
+#define SEALEVELPRESSURE_HPA (***FILL_IN_HERE***)  // Define the sea level pressure in hPa (standard atmospheric pressure)
 
 Adafruit_BMP3XX bmp;           // Create an object for the BMP388 sensor
 File dataFile;                 // File object to handle writing data to the SD card
+unsigned long startTime;       // Start time to track elapsed time
 
 void setup() {
   // Initialize serial communication for debugging (with baud rate 115200)
@@ -18,8 +19,8 @@ void setup() {
   // Print a message to the serial monitor to indicate that the setup has started
   Serial.println("Teensy 4.1 BMP388 Unit Test");
 
-  // Initialize the SD card. BUILTIN_SDCARD refers to Teensy 4.1's built-in SD card slot
-  if (!SD.begin(*** FILL_IN_HERE ***)) {
+  // Initialize the SD card in the Teensy 4.1's built-in SD card slot
+  if (!SD.begin(***FILL_IN_HERE***)) {
     // If SD card initialization fails, print an error message and halt execution
     Serial.println("SD card initialization failed!");
     while (1);  // Infinite loop to stop the program
@@ -30,6 +31,17 @@ void setup() {
   if (SD.exists("BMP388_data.csv")) {
     SD.remove("BMP388_data.csv");  // Remove existing file
     Serial.println("Existing data file deleted.");
+  }
+
+  // Create a new CSV file on the SD card to store data
+  dataFile = SD.open("BMP388_data.csv", FILE_WRITE);  // Open (or create) a file for writing
+  if (dataFile) {
+    // Write the header line to the CSV file (labels for the columns)
+    dataFile.println("Timestamp,Temperature (C),Pressure (hPa),Altitude (m)");
+  } else {
+    // If the file can't be opened, print an error message and halt execution
+    Serial.println("Error opening BMP388_data.csv");
+    while (1);  // Infinite loop to stop the program
   }
 
   // Initialize the BMP388 sensor with I2C communication
@@ -43,22 +55,19 @@ void setup() {
   bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);  // Set temperature oversampling to 8x for higher precision
   bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);     // Set pressure oversampling to 4x
   bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);        // Set the IIR filter to reduce noise
-  bmp.setOutputDataRate(BMP3_ODR_*** FILL_IN_HERE ***_HZ);                  // Set output data rate to 1 Hz (1 sample per second)
+  bmp.setOutputDataRate(BMP3_ODR_***FILL_IN_HERE***_HZ);                  // Set output data rate to 1 Hz (1 sample per second)
 
-  // Create a new CSV file on the SD card to store data
-  dataFile = SD.open("BMP388_data.csv", FILE_WRITE);  // Open (or create) a file for writing
-  if (dataFile) {
-    // Write the header line to the CSV file (labels for the columns)
-    dataFile.println("Timestamp,Temperature (C),Pressure (hPa),Altitude (m)");
-    dataFile.close();  // Close the file after writing the header
-  } else {
-    // If the file can't be opened, print an error message and halt execution
-    Serial.println("Error opening BMP388_data.csv");
-    while (1);  // Infinite loop to stop the program
-  }
+  startTime = millis();  // Initialize startTime when the setup is completed
 }
 
 void loop() {
+  // Check if 1 minute has passed
+  if (millis() - startTime >= ***FILL_IN_HERE***) { // Compare current milliseconds to 1 minute in milleseconds
+    dataFile.close();  // Close the file after 1 minute of data logging
+    Serial.println("1 minute has passed. Stopping the data logging.");
+    while(1);  // Stop the program after data logging completes
+  }
+  
   // Take a reading from the BMP388 sensor
   if (!bmp.performReading()) {
     // If reading fails, print an error message and skip to the next loop iteration
@@ -66,11 +75,10 @@ void loop() {
     return;
   }
 
-  // Open the data file on the SD card for appending data
-  dataFile = SD.open("BMP388_data.csv", FILE_WRITE);  // Open file in append mode
+  // Log data to the file only if it was opened successfully in setup()
   if (dataFile) {
     // Calculate the timestamp (in seconds) since the program started
-    unsigned long timestamp = millis() / 1000;  // `millis()` returns milliseconds, so divide by 1000 to get seconds
+    unsigned long timestamp = millis() / ***FILL_IN_HERE***;  // `millis()` returns milliseconds, so divide by a number to get seconds
 
     // Write the timestamp and sensor data to the SD card in CSV format
     dataFile.print(timestamp);               // Write the timestamp
@@ -81,13 +89,12 @@ void loop() {
     dataFile.print(",");                     // CSV delimiter
     dataFile.println(bmp.readAltitude(SEALEVELPRESSURE_HPA));  // Write the calculated altitude in meters
 
-    // Close the file after writing
-    dataFile.close();
+    // Data is written continuously, but the file is not closed until the 1-minute limit
   } else {
-    // If the file can't be opened, print an error message (no infinite loop here since it's in the main loop)
+    // If the file can't be accessed (although it should have been opened in setup), print an error
     Serial.println("Error writing to BMP388_data.csv");
   }
 
   // Wait for 1 second before taking another reading
-  delay(*** FILL_IN_HERE ***);  // Units are in milliseconds
+  delay(***FILL_IN_HERE***);  // how many milliseconds in 1 second
 }
