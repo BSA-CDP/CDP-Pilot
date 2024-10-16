@@ -8,24 +8,18 @@
 // Create a BMP3XX sensor object
 Adafruit_BMP3XX bmp;
 
-// Define the correct I2C pins (switched)
-#define SCL_PIN 16
-#define SDA_PIN 17
-
 void setup() {
   Serial.begin(115200);
   while (!Serial);
   Serial.println("Adafruit BMP388 / BMP390 test");
 
-  // Set custom I2C pins with switched assignments
-  Wire.setSCL(SCL_PIN);
-  Wire.setSDA(SDA_PIN);
+ // Initialize I2C communication on the secondary bus (Wire1) with custom pins
+Wire1.begin();
 
-  // Begin the I2C communication with custom pins
-  if (!bmp.begin_I2C()) {
+if (!bmp.begin_I2C(0x77, &Wire1)) {
     Serial.println("Could not find a valid BMP3 sensor, check wiring!");
     while (1);
-  }
+}
 
   // Set up oversampling and filter initialization
   bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
