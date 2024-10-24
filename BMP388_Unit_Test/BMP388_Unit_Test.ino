@@ -19,13 +19,12 @@ void setup() {
   // Print a message to the serial monitor to indicate that the setup has started
   Serial.println("Teensy 4.1 BMP388 Unit Test");
 
-  // Initialize the SD card in the Teensy 4.1's built-in SD card slot
-  if (!SD.begin(***FILL_IN_HERE***)) {
+  // Initialize the SD card in the Teensy 4.1
+  if (!SD.begin(***FILL_IN_HERE***)) { // How do we refer to the SD card in the Teensy 4.1's built-in SD card slot
     // If SD card initialization fails, print an error message and halt execution
     Serial.println("SD card initialization failed!");
-    while (1);  // Infinite loop to stop the program
+    while (1);  // Infinite loop to stop the program in case of failure
   }
-  Serial.println("SD card initialized.");  // SD card initialized successfully
 
   // Delete the existing data file if it exists
   if (SD.exists("BMP388_data.csv")) {
@@ -36,8 +35,8 @@ void setup() {
   // Create a new CSV file on the SD card to store data
   dataFile = SD.open("BMP388_data.csv", FILE_WRITE);  // Open (or create) a file for writing
   if (dataFile) {
-    // Write the header line to the CSV file (labels for the columns)
-    dataFile.println("Timestamp,Temperature (C),Pressure (hPa),Altitude (m)");
+    // Write the header line to the CSV file, fill in the units for each column!
+    dataFile.println("***FILL_IN_HERE***,***FILL_IN_HERE***,***FILL_IN_HERE***,***FILL_IN_HERE***");
   } else {
     // If the file can't be opened, print an error message and halt execution
     Serial.println("Error opening BMP388_data.csv");
@@ -55,9 +54,14 @@ void setup() {
   bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);  // Set temperature oversampling to 8x for higher precision
   bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);     // Set pressure oversampling to 4x
   bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);        // Set the IIR filter to reduce noise
-  bmp.setOutputDataRate(BMP3_ODR_***FILL_IN_HERE***_HZ);                  // Set output data rate to 1 Hz (1 sample per second)
+  bmp.setOutputDataRate(BMP3_ODR_100_HZ);                  // Set output data rate
 
   startTime = millis();  // Initialize startTime when the setup is completed
+
+  pinMode(LED_BUILTIN, OUTPUT); // initialize digital pin LED_BUILTIN as an output.
+
+  Serial.println("***FILL_IN_HERE***");  // Print to serial monitor that data is starting to be collected
+
 }
 
 void loop() {
@@ -65,6 +69,7 @@ void loop() {
   if (millis() - startTime >= ***FILL_IN_HERE***) { // Compare current milliseconds to 1 minute in milleseconds
     dataFile.close();  // Close the file after 1 minute of data logging
     Serial.println("1 minute has passed. Stopping the data logging.");
+    digitalWrite(LED_BUILTIN, LOW);  // turn the LED off (HIGH is the voltage level)
     while(1);  // Stop the program after data logging completes
   }
   
@@ -94,6 +99,8 @@ void loop() {
     // If the file can't be accessed (although it should have been opened in setup), print an error
     Serial.println("Error writing to BMP388_data.csv");
   }
+
+  digitalWrite(***FILL_IN_HERE***, ***FILL_IN_HERE***);  // turn the Teensy LED on
 
   // Wait for 1 second before taking another reading
   delay(***FILL_IN_HERE***);  // how many milliseconds in 1 second
