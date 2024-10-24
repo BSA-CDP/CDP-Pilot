@@ -116,8 +116,6 @@ void loop() {
     dataFile.print(",");
     dataFile.println(roll);                 // Accel Value
 
-    // Flush the file to ensure data is written immediately
-    dataFile.flush();
   } else {
     // If the file can't be accessed, print an error
     Serial.println("Error writing to IMU_data.csv");
