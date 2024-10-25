@@ -77,11 +77,11 @@ void loop() {
   if (!bmp.performReading()) {
     // If reading fails, print an error message and skip to the next loop iteration
     Serial.println("Failed to perform reading :(");
-    return;
+    while(1);
   }
 
-  // Log data to the file only if it was opened successfully in setup()
-  if (dataFile) {
+  // Log data to the file only if the SD card can be initialized (or found)
+  if (SD.begin(BUILTIN_SDCARD)) {
     // Calculate the timestamp (in seconds) since the program started
     unsigned long timestamp = millis() / ***FILL_IN_HERE***;  // `millis()` returns milliseconds, so divide by a number to get seconds
 
@@ -98,6 +98,7 @@ void loop() {
   } else {
     // If the file can't be accessed (although it should have been opened in setup), print an error
     Serial.println("Error writing to BMP388_data.csv");
+    while(1);
   }
 
   digitalWrite(***FILL_IN_HERE***, ***FILL_IN_HERE***);  // turn the Teensy LED on
