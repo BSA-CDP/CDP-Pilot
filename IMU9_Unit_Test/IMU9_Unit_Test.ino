@@ -80,7 +80,7 @@ void loop() {
   }
 
   // Log data to the file if the SD file can be found
-  if (SD.exists("BMP388_data.csv")) {
+  if (SD.exists("IMU_data.csv")) {
     // Calculate the timestamp (in seconds) since the program started
     unsigned long timestamp = millis() / ***FILL_IN_HERE***;  // `millis()` returns milliseconds, so divide by a number to get seconds
 
