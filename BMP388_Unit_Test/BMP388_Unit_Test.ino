@@ -43,6 +43,8 @@ void setup() {
     while (1);  // Infinite loop to stop the program
   }
 
+  Wire.begin(); // Initialize I2C communication
+
   // Initialize the BMP388 sensor with I2C communication
   if (!bmp.begin_I2C()) {  // Default I2C pins for Teensy 4.1 are SDA (pin 18) and SCL (pin 19)
     // If sensor initialization fails, print an error message and halt execution
@@ -66,37 +68,37 @@ void setup() {
 
 void loop() {
   // Check if 1 minute has passed
-  if (millis() - startTime >= ***FILL_IN_HERE***) { // Compare current milliseconds to 1 minute in milleseconds
-    dataFile.close();  // Close the file after 1 minute of data logging
+  if (millis() - startTime >= ***FILL_IN_HERE***) { // Compare current milliseconds to 1 minute in milliseconds
+    dataFile.close();  // Close the file 
     Serial.println("1 minute has passed. Stopping the data logging.");
-    digitalWrite(LED_BUILTIN, LOW);  // turn the LED off (HIGH is the voltage level)
+    digitalWrite(LED_BUILTIN, LOW);  // turn the LED off
     while(1);  // Stop the program after data logging completes
   }
-  
-  // Take a reading from the BMP388 sensor
-  if (!bmp.performReading()) {
-    // If reading fails, print an error message and skip to the next loop iteration
-    Serial.println("Failed to perform reading :(");
-    while(1);
-  }
 
-  // Log data to the file only if the SD card can be initialized (or found)
-  if (SD.begin(BUILTIN_SDCARD)) {
+  // Log data to the file if the SD file can be found
+  if (SD.exists("BMP388_data.csv")) {
     // Calculate the timestamp (in seconds) since the program started
-    unsigned long timestamp = millis() / ***FILL_IN_HERE***;  // `millis()` returns milliseconds, so divide by a number to get seconds
+    unsigned long timestamp = millis() / ***FILL_IN_HERE***;  // `millis()` returns milliseconds, so divide by an amount to get seconds
 
-    // Write the timestamp and sensor data to the SD card in CSV format
-    dataFile.print(timestamp);               // Write the timestamp
+    dataFile.print(timestamp);               // Write the timestamp to the file
     dataFile.print(",");                     // CSV delimiter (comma)
-    dataFile.print(bmp.temperature);         // Write the temperature in Celsius
-    dataFile.print(",");                     // CSV delimiter
-    dataFile.print(bmp.pressure / 100.0);    // Write the pressure in hPa (Pa to hPa conversion)
-    dataFile.print(",");                     // CSV delimiter
-    dataFile.println(bmp.readAltitude(SEALEVELPRESSURE_HPA));  // Write the calculated altitude in meters
 
-    // Data is written continuously, but the file is not closed until the 1-minute limit
+    // Take a reading from the BMP388 sensor
+    if (bmp.performReading()) {
+      // If reading can be  taken, write the sensor data to the SD card in CSV format
+      dataFile.print(bmp.temperature);         // Write the temperature in Celsius
+      dataFile.print(",");                     // CSV delimiter
+      dataFile.print(bmp.pressure / 100.0);    // Write the pressure in hPa (Pa to hPa conversion)
+      dataFile.print(",");                     // CSV delimiter
+      dataFile.println(bmp.readAltitude(SEALEVELPRESSURE_HPA));  // Write the calculated altitude in meters
+    } else {
+      // If reading fails, print an error message and halt the program
+      Serial.println("Failed to read BMP Sensor!");
+      while(1);
+    }
+
   } else {
-    // If the file can't be accessed (although it should have been opened in setup), print an error
+    // If the file can't be accessed, print an error
     Serial.println("Error writing to BMP388_data.csv");
     while(1);
   }
@@ -104,5 +106,5 @@ void loop() {
   digitalWrite(***FILL_IN_HERE***, ***FILL_IN_HERE***);  // turn the Teensy LED on
 
   // Wait for 1 second before taking another reading
-  delay(***FILL_IN_HERE***);  // how many milliseconds in 1 second
+  delay(***FILL_IN_HERE***);  // how many milliseconds in 1 second?
 }
