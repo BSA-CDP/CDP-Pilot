@@ -23,8 +23,6 @@ void setup()
   Serial.begin(9600);
   while (!Serial);
 
-  Wire.begin(); // Initialize I2C communication
-
   Serial.println(" Pololu IMU-9 v5 Unit LED Test");
 
   // initialize the digitals pin as an outputs
@@ -60,6 +58,8 @@ void setup()
     digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);  // Turn on red LED for SD card failure
     while (1);  // Stop the program if file cannot be opened
   }
+
+  Wire.begin(); // Initialize I2C communication
 
   // Check if the magnetometer is still connected through intialization
   if (!mag.init())
@@ -102,57 +102,51 @@ void loop() {
     while (1);  // Stop the program
   }
 
-  if (!mag.init()) {
-    Serial.println("Error: Failed to read from LIS3MDL magnetometer!"); // Prints error to serial
-    dataFile.println("Error: Failed to read from LIS3MDL magnetometer!"); // Prints error to Data File 
-    digitalWrite(greenPin, LOW); // Ensure Green LED is off
-    digitalWrite(redPin, HIGH);  // Turn on red LED for magnetometer failure
-    while (1); // Stop the program if Magnetometer cannot be read
-  }
-
-  if (!imu.init()) {
-    Serial.println("Error: Failed to read from LSM6 IMU!"); // Prints error to serial
-    dataFile.println("Error: Failed to read from LSM6 IMU!"); // Prints error to Data File
-    digitalWrite(greenPin, LOW); // Ensure Green LED is off
-    digitalWrite(redPin, HIGH);  // Turn on red LED for magnetometer failure
-    while (1); // Stop the program
-  }
-
-  // Perform Magnetometer and IMU Readings
-  mag.read();
-  imu.read();
-
-  // Calculate heading, pitch, and roll angles from sensor data
-  float heading = computeHeading();
-  float pitch = computePitch();
-  float roll = computeRoll();
-
-  // Log data to the file only if the SD card can be initialized (or found)
-  if (SD.begin(BUILTIN_SDCARD)) {
+  // Log data to the file if the SD file can be found
+  if (SD.exists("BMP388_data.csv")) {
     // Calculate the timestamp (in seconds) since the program started
     unsigned long timestamp = millis() / 1000;  // `millis()` returns milliseconds, so divide by 1000 to get seconds
 
-    // Write the timestamp, accelerometer, gyroscope, and magnetometer data to the SD card in CSV format
     dataFile.print(timestamp);               // Write the timestamp
     dataFile.print(",");                     // CSV delimiter (comma)
-    dataFile.print(heading);                 // Accel X
-    dataFile.print(",");
-    dataFile.print(pitch);                 // Accel Y
-    dataFile.print(",");
-    dataFile.println(roll);                 // Accel Z
 
-    digitalWrite(redPin, LOW);    // Turn off red LED
-    digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);   // Turn on green LED for successful logging
+    // Attempt to take a reading from the IMU sensor
+    if (imu.init() && mag.init()) {
+      // If sensor is connected, perform Magnetometer and IMU Readings
+      mag.read();
+      imu.read();
+      // Calculate heading, pitch, and roll angles from sensor data
+      float heading = computeHeading();
+      float pitch = computePitch();
+      float roll = computeRoll();
+      dataFile.print(heading);
+      dataFile.print(",");   
+      dataFile.print(pitch);
+      dataFile.print(",");   
+      dataFile.println(roll);
+      digitalWrite(redPin, LOW);    // Turn off red LED
+      digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);   // Turn on green LED for successful logging  
+    } else {
+      // Print error message if no data can be read
+      Serial.println("Failed to read IMU!");
+      digitalWrite(greenPin, LOW);
+      digitalWrite(redPin, HIGH);  // Turn on red LED for magnetometer failure
+      while(1); //Program halts
+    } 
+
   } else {
     // If the file can't be accessed, print an error
     Serial.println("Error writing to IMU_data.csv");
-    digitalWrite(redPin, HIGH);  // Turn on red LED for magnetometer failure
+    digitalWrite(greenPin, LOW);
+    digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);  // Turn on red LED
+    while(1);
   }
 
   digitalWrite(LED_BUILTIN, HIGH);  // turn the Teensy LED on (HIGH is the voltage level)
 
   // Delay for 1 second (1000 ms) to log data every second
   delay(1000);
+
 }
 
 //Functions Below... Outside the scope of this project
