@@ -16,10 +16,8 @@ LIS3MDL::vector<int16_t> m_max = {+32767, +32767, +32767};
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
-
-  Wire.begin(); // Initialize I2C communication
 
   Serial.println("Starting Pololu IMU-9 v5 Unit Test");
 
@@ -44,6 +42,8 @@ void setup()
     Serial.println("Error opening IMU_data.csv");
     while (1);  // Stop the program if file cannot be opened
   }
+
+  Wire.begin(); // Initialize I2C communication
 
   // Initialize Magnetomter
   if (!mag.init()) {
@@ -79,53 +79,45 @@ void loop() {
     while (1);  // Stop the program
   }
 
-  // Check if the Magnetometer is still connected through intialization
-  if (!mag.init()) {
-    Serial.println("Error: Failed to read from LIS3MDL magnetometer!"); // Prints error to serial
-    dataFile.println("Error: Failed to read from LIS3MDL magnetometer!"); // Prints error to Data File 
-    while (1); // Stop the program if Magnetometer cannot be read
-  }
-
-  // Check if the IMU is still connected through intialization
-  if (!imu.init()) {
-    Serial.println("Error: Failed to read from LSM6 IMU!"); // Prints error to serial
-    dataFile.println("Error: Failed to read from LSM6 IMU!"); // Prints error to Data File
-    while (1); // Stop the program
-  }
-
-  // Perform Magnetometer and IMU Readings
-  ***FILL_IN_HERE***; 
-  ***FILL_IN_HERE***;
-
-  // Calculate heading, pitch, and roll angles from sensor data
-  float heading = computeHeading();
-  float pitch = computePitch();
-  float roll = computeRoll();
-
-  // Log data to the file only if the SD card can be initialized (or found)
-  if (SD.begin(BUILTIN_SDCARD)) {
+  // Log data to the file if the SD file can be found
+  if (SD.exists("BMP388_data.csv")) {
     // Calculate the timestamp (in seconds) since the program started
-    unsigned long timestamp = millis() / ***FILL_IN_HERE***;  // `millis()` returns milliseconds, so divide by a number to get the seconds timestamp
+    unsigned long timestamp = millis() / ***FILL_IN_HERE***;  // `millis()` returns milliseconds, so divide by a number to get seconds
 
-    // Write the timestamp, accelerometer, gyroscope, and magnetometer data to the SD card in CSV format
     dataFile.print(timestamp);               // Write the timestamp
     dataFile.print(",");                     // CSV delimiter (comma)
-    dataFile.print(heading);                 // Heading Value
-    dataFile.print(",");
-    dataFile.print(pitch);                 // Pitch Value
-    dataFile.print(",");
-    dataFile.println(roll);                 // Accel Value
 
+    // Attempt to take a reading from the IMU sensor
+    if (imu.init() && mag.init()) {
+      // If sensor is connected, perform Magnetometer and IMU Readings
+      ***FILL_IN_HERE***; //
+      ***FILL_IN_HERE***;
+      // Calculate heading, pitch, and roll angles from sensor data
+      float heading = computeHeading();
+      float pitch = computePitch();
+      float roll = computeRoll();
+      dataFile.print(heading);
+      dataFile.print(",");   
+      dataFile.print(pitch);
+      dataFile.print(",");   
+      dataFile.println(roll);
+    } else {
+      // Print error message if no data can be read
+      Serial.println("Failed to read IMU!");
+      while(1);
+    }
+    
   } else {
     // If the file can't be accessed, print an error
     Serial.println("Error writing to IMU_data.csv");
-    while(1);
+    while(1); // Stop program
   }
 
   digitalWrite(***FILL_IN_HERE***, ***FILL_IN_HERE***);  // turn the Teensy LED on
 
   // Delay for 1 second to log data every second. Remember time is in milliseconds
   delay(***FILL_IN_HERE***);
+
 }
 
 //Functions... Outside the scope of this project
