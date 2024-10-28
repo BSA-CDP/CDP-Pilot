@@ -60,6 +60,8 @@ void setup() {
     while (1);  // Infinite loop to stop the program
   }
 
+  Wire.begin(); // Initialize I2C communication
+
   // Initialize the BMP388 sensor with I2C communication
   if (!bmp.begin_I2C()) {  // Default I2C pins for Teensy 4.1 are SDA (pin 18) and SCL (pin 19)
     // If sensor initialization fails, print an error message and halt execution
@@ -93,39 +95,39 @@ void loop() {
     digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);   // Turn on blue LED
     while(1);  // Stop the program after data logging completes
   }
-  
-  // Take a reading from the BMP388 sensor
-  if (!bmp.performReading()) {
-    // If reading fails, print an error message and signify LED status
-    Serial.println("Failed to perform reading :(");
-    digitalWrite(greenPin, LOW);
-    digitalWrite(redPin, HIGH);
-    while(1);
-  }
 
-  // Log data to the file only if the SD card can be initialized (or found)
-  if (SD.begin(BUILTIN_SDCARD)) {
+  // Log data to the file if the SD file can be found
+  if (SD.exists("BMP388_data.csv")) {
     // Calculate the timestamp (in seconds) since the program started
     unsigned long timestamp = millis() / 1000;  // `millis()` returns milliseconds, so divide by 1000 to get seconds
 
-    // Write the timestamp and sensor data to the SD card in CSV format
     dataFile.print(timestamp);               // Write the timestamp
     dataFile.print(",");                     // CSV delimiter (comma)
-    dataFile.print(bmp.temperature);         // Write the temperature in Celsius
-    dataFile.print(",");                     // CSV delimiter
-    dataFile.print(bmp.pressure / 100.0);    // Write the pressure in hPa (Pa to hPa conversion)
-    dataFile.print(",");                     // CSV delimiter
-    dataFile.println(bmp.readAltitude(SEALEVELPRESSURE_HPA));  // Write the calculated altitude in meters
 
-    digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);    // Turn off red LED
-    digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);   // Turn on green LED for successful logging
+    // Attempt to take a reading from the BMP388 sensor
+    if (bmp.performReading()) {
+      // If reading can be  taken, write the sensor data to the SD card in CSV format
+      dataFile.print(bmp.temperature);         // Write the temperature in Celsius
+      dataFile.print(",");                     // CSV delimiter
+      dataFile.print(bmp.pressure / 100.0);    // Write the pressure in hPa (Pa to hPa conversion)
+      dataFile.print(",");                     // CSV delimiter
+      dataFile.println(bmp.readAltitude(SEALEVELPRESSURE_HPA));  // Write the calculated altitude in meters
+      digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);    // Turn off red LED
+      digitalWrite(***Fill_In_Here***, ***Fill_In_Here***);   // Turn on green LED for successful logging
+    } else {
+      // If reading fails, print an error message and halt the program
+      Serial.println("Failed to read BMP Sensor!");
+      digitalWrite(greenPin, LOW); // Ensure green LED is off
+      digitalWrite(redPin, HIGH); // Make sure red LED is on
+      while(1); // Program halts
+    }
 
   } else {
-    // If the file can't be accessed, print an error and signify status on LED
+    // If the file can't be accessed, print an error
     Serial.println("Error writing to BMP388_data.csv");
     digitalWrite(***Fill_In_Here***, ***Fill_In_Here***); // turn off green LED
     digitalWrite(***Fill_In_Here***, ***Fill_In_Here***); // Turn on red LED
-    while (1);
+    while(1); // Program halts
   }
 
   digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
